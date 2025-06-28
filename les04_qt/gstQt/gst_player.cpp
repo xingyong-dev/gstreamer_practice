@@ -7,9 +7,7 @@
 #include <opencv2/opencv.hpp>
 #include "gst_player.h"
 
-std::mutex frame_mutex;
-cv::Mat lastest_frame;
-
+#define GLIB_DISABLE_DEPRECATION_WARNINGS
 GstPlayer::GstPlayer(QObject *) {
     gst_init(nullptr, nullptr);
 
@@ -24,11 +22,6 @@ void GstPlayer::play(const std::string &url, WId winId) {
 
     pipeline = gst_pipeline_new("rtsp-player");
     auto src = gst_element_factory_make("rtspsrc", "src");
-//    auto depay = gst_element_factory_make("rtph264depay", "depay");
-//    auto parse = gst_element_factory_make("h264parse", "parse");
-//    auto dec = gst_element_factory_make("avdec_h264", "dec");
-//    auto conv = gst_element_factory_make("videoconvert", "conv");
-//    auto sink = gst_element_factory_make("xvimagesink", "sink");
     auto depay = gst_element_factory_make("rtph264depay", "depay");
     auto parse = gst_element_factory_make("h264parse", "parse");
     auto dec = gst_element_factory_make("vpudec", "dec");
@@ -55,30 +48,12 @@ void GstPlayer::play(const std::string &url, WId winId) {
         GstStructure* s = gst_caps_get_structure(caps, 0);
         const gchar* formatName = gst_structure_get_string(s, "format");
 
-//        gchar *caps_str = gst_caps_to_string(caps);
-
         gst_structure_get_int(s, "width", &width);
         gst_structure_get_int(s, "height", &height);
 
         g_print("📷 Frame: resolution = %dx%d, buffer size = %" G_GSIZE_FORMAT " bytes ,format = %s \n",
             width, height, gst_buffer_get_size(buffer), formatName);
-/*
-        GstMapInfo map;
-        if(gst_buffer_map(buffer, &map, GST_MAP_READ))
-        {
-            cv::Mat yuv(height*3/2, width,CV_8UC1,(void*)map.data);
-            cv::Mat bgr;
-            cv::cvtColor(yuv,bgr,cv::COLOR_YUV2BGR_I420);
-            // 示例：输出图像信息
-            std::cout << "📷 OpenCV: Got frame " << width << "x" << height
-                      << ", type=" << bgr.type()
-                      << ", channels=" << bgr.channels() << std::endl;
-            {
-                std::lock_guard<std::mutex> lock(frame_mutex);
-                lastest_frame = bgr.clone();
-            }
-            gst_buffer_unmap(buffer, &map);
-        }*/
+
         gst_sample_unref(sample);
         return GST_FLOW_OK;
     }), nullptr);
@@ -108,7 +83,8 @@ void GstPlayer::play(const std::string &url, WId winId) {
     gst_element_set_state(sink, GST_STATE_READY);
     if(GST_IS_VIDEO_OVERLAY(sink))
     {
-        gst_video_overlay_set_window_handle(GST_VIDEO_OVERLAY(sink), (guintptr)winId);
+        gst_video_overlay_set_window_handle(GST_VIDEO_OVERLAY(sink), static_cast<guintptr>(winId));
+
     } else{
         qDebug()<<"sink does not support GstVideoOverlay";
     }

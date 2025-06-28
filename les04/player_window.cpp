@@ -29,27 +29,22 @@ PlayerWindow::PlayerWindow(QWidget *parent) : QWidget(parent){
     mainLayout->addLayout(buttonLayout);
     setLayout(mainLayout);
 
-    QTimer *timer = new QTimer(this);
-    connect(timer,&QTimer::timeout,this, [=](){
-        std::lock_guard<std::mutex> lock(frame_mutex);
-        if(!lastest_frame.empty())
-        {
-            cv::imshow("Video", lastest_frame);
-            cv::waitKey(1);
-        }
-    });
-    timer->start(30);
+//    QTimer *timer = new QTimer(this);
+//    connect(timer,&QTimer::timeout,this, [=](){
+//        std::lock_guard<std::mutex> lock(frame_mutex);
+//        if(!lastest_frame.empty())
+//        {
+//            cv::imshow("Video", lastest_frame);
+//            cv::waitKey(1);
+//        }
+//    });
+//    timer->start(30);
 }
 
 PlayerWindow::~PlayerWindow() noexcept {
     player.stop();
 }
-//void PlayerWindow::startStreaming(const std::string &uri) {
-//    player.play(uri, winId());
-//}
-//void PlayerWindow::stopStreaming() {
-//    player.stop();
-//}
+
 
 void PlayerWindow::resizeEvent(QResizeEvent *event) {
     QWidget::resizeEvent(event);

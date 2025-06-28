@@ -38,6 +38,7 @@ target_link_libraries(les04
         Qt5::Core
         Qt5::Gui
         Qt5::Widgets
+        pthread
         ${GST_LIBRARIES}
         ${GST_APP_LIBRARIES}
         ${GST_VIDEO_LIBRARIES}
